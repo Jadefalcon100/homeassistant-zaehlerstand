@@ -9,7 +9,7 @@
     "energy.meters_monitoring"
   ],
   "codeowners": [
-    "@GITHUB_USER"
+    "@jadefalcon100"
   ],
   "config_flow": true,
   "dependencies": [
@@ -17,10 +17,10 @@
     "http",
     "media_source"
   ],
-  "documentation": "https://github.com/GITHUB_USER/ha-zaehlerstand",
+  "documentation": "https://github.com/jadefalcon100/ha-zaehlerstand",
   "integration_type": "device",
   "iot_class": "calculated",
-  "issue_tracker": "https://github.com/GITHUB_USER/ha-zaehlerstand/issues",
+  "issue_tracker": "https://github.com/jadefalcon100/ha-zaehlerstand/issues",
   "requirements": [],
   "version": "1.1.0"
 }

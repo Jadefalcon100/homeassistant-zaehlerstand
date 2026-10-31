@@ -409,7 +409,7 @@ if (!customElements.get("zaehlerstand-card")) {
     name: "Zählerstand per Foto",
     description: "Zähler mit der Handykamera fotografieren und direkt auswerten lassen.",
     preview: false,
-    documentationURL: "https://github.com/GITHUB_USER/ha-zaehlerstand",
+    documentationURL: "https://github.com/jadefalcon100/ha-zaehlerstand",
   });
   console.info(`%c ZAEHLERSTAND-CARD %c ${CARD_VERSION} `, "background:#03a9f4;color:#fff", "");
 }

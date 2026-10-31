@@ -1,8 +1,8 @@
 # Zählerstand per Foto – Home Assistant Integration
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
-[![Validate](https://github.com/GITHUB_USER/ha-zaehlerstand/actions/workflows/validate.yml/badge.svg)](https://github.com/GITHUB_USER/ha-zaehlerstand/actions/workflows/validate.yml)
-[![Release](https://img.shields.io/github/v/release/GITHUB_USER/ha-zaehlerstand)](https://github.com/GITHUB_USER/ha-zaehlerstand/releases)
+[![Validate](https://github.com/jadefalcon100/ha-zaehlerstand/actions/workflows/validate.yml/badge.svg)](https://github.com/jadefalcon100/ha-zaehlerstand/actions/workflows/validate.yml)
+[![Release](https://img.shields.io/github/v/release/jadefalcon100/ha-zaehlerstand)](https://github.com/jadefalcon100/ha-zaehlerstand/releases)
 
 Fotografiere deinen Strom-, Gas- oder Wasserzähler. Eine KI liest den Stand ab und
 speichert ihn in einer Sensor-Entität, die du auch im **Energie-Dashboard** nutzen kannst.
@@ -43,16 +43,16 @@ in den Optionen „Sinkenden Zählerstand erlauben“ einschalten.
 
 ### Über HACS (empfohlen)
 
-[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=GITHUB_USER&repository=ha-zaehlerstand&category=integration)
+[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jadefalcon100&repository=ha-zaehlerstand&category=integration)
 
 Oder von Hand:
 1. Öffne in HACS ⋮ → **Benutzerdefinierte Repositories**.
-2. Trage `https://github.com/GITHUB_USER/ha-zaehlerstand` ein und wähle den Typ **Integration**.
+2. Trage `https://github.com/jadefalcon100/ha-zaehlerstand` ein und wähle den Typ **Integration**.
 3. Installiere „Zählerstand per Foto“ und starte Home Assistant neu.
 
 ### Manuell
 
-Lade `zaehlerstand.zip` aus dem neuesten [Release](https://github.com/GITHUB_USER/ha-zaehlerstand/releases)
+Lade `zaehlerstand.zip` aus dem neuesten [Release](https://github.com/jadefalcon100/ha-zaehlerstand/releases)
 herunter. Entpacke es nach `/config/custom_components/zaehlerstand/` und starte Home Assistant neu.
 
 ### Zähler anlegen
