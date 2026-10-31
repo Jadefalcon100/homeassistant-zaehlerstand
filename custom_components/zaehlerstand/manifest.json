@@ -1,1 +1,13 @@
-
+{
+  "domain": "zaehlerstand",
+  "name": "Zählerstand per Foto",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["media_source"],
+  "after_dependencies": ["ai_task", "camera"],
+  "documentation": "https://github.com/",
+  "integration_type": "device",
+  "iot_class": "calculated",
+  "requirements": [],
+  "version": "1.0.0"
+}
