@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add meter",
+        "description": "Create an electricity, gas or water meter. Add the integration again for each additional meter.",
+        "data": {
+          "zaehlertyp": "Meter type",
+          "name": "Name (optional)",
+          "zaehlernummer": "Meter number (optional)",
+          "ai_task_entity": "AI Task entity",
+          "nachkommastellen": "Displayed decimals",
+          "rueckgang_erlauben": "Allow decreasing readings"
+        },
+        "data_description": {
+          "ai_task_entity": "Leave empty to use the default AI Task entity.",
+          "zaehlernummer": "If empty, the number recognised on the first photo is used.",
+          "rueckgang_erlauben": "By default a lower value than the previous one is rejected."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Meter options",
+        "data": {
+          "ai_task_entity": "AI Task entity",
+          "nachkommastellen": "Displayed decimals",
+          "rueckgang_erlauben": "Allow decreasing readings"
+        },
+        "data_description": {
+          "ai_task_entity": "Leave empty to use the default AI Task entity."
+        }
+      }
+    }
+  },
+  "selector": {
+    "zaehlertyp": {
+      "options": {
+        "strom": "Electricity",
+        "gas": "Gas",
+        "wasser": "Water"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "zaehlerstand": {
+        "name": "Meter reading",
+        "state_attributes": {
+          "letzte_ablesung": {
+            "name": "Last reading"
+          },
+          "quelle": {
+            "name": "Source"
+          },
+          "foto": {
+            "name": "Photo"
+          },
+          "foto_pfad": {
+            "name": "Photo path"
+          },
+          "erkannte_zaehlernummer": {
+            "name": "Detected meter number"
+          },
+          "zaehlernummer_passt": {
+            "name": "Meter number matches"
+          }
+        }
+      }
+    },
+    "text": {
+      "zaehlernummer": {
+        "name": "Meter number"
+      }
+    },
+    "image": {
+      "foto": {
+        "name": "Last photo"
+      }
+    }
+  },
+  "services": {
+    "foto_auswerten": {
+      "name": "Read photo",
+      "description": "Reads the meter value from a photo (media browser) or camera snapshot using AI and stores it.",
+      "fields": {
+        "entity_id": {
+          "name": "Meter",
+          "description": "Meter reading sensor."
+        },
+        "foto": {
+          "name": "Photo",
+          "description": "Photo from the media browser, e.g. uploaded to Local Media."
+        },
+        "kamera": {
+          "name": "Camera",
+          "description": "Alternatively, a camera to take a snapshot from."
+        },
+        "ai_task_entity": {
+          "name": "AI Task entity",
+          "description": "Overrides the configured AI Task entity."
+        },
+        "erzwingen": {
+          "name": "Force",
+          "description": "Store even if lower than the previous value."
+        }
+      }
+    },
+    "wert_setzen": {
+      "name": "Set reading manually",
+      "description": "Sets the meter reading without a photo.",
+      "fields": {
+        "entity_id": {
+          "name": "Meter",
+          "description": "Meter reading sensor."
+        },
+        "wert": {
+          "name": "Value",
+          "description": "New meter reading."
+        },
+        "erzwingen": {
+          "name": "Force",
+          "description": "Store even if lower than the previous value."
+        }
+      }
+    }
+  }
+}

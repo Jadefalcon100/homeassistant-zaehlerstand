@@ -1,0 +1,43 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet
+labels: [bug]
+body:
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home-Assistant-Version
+      placeholder: "2026.10.1"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version der Integration
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: ai
+    attributes:
+      label: Verwendete KI-Integration und Modell
+      placeholder: "OpenAI gpt-4o-mini / Ollama qwen2.5vl"
+  - type: dropdown
+    id: meter
+    attributes:
+      label: Zählertyp
+      options: [Strom, Gas, Wasser]
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschreibung
+      description: Was ist passiert, was hast du erwartet?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log-Auszug
+      description: |
+        Debug-Logging aktivieren unter Einstellungen → Geräte & Dienste →
+        Zählerstand per Foto → ⋮ → Debug-Protokollierung aktivieren.
+      render: text

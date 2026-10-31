@@ -1,0 +1,24 @@
+{
+  "domain": "zaehlerstand",
+  "name": "Zählerstand per Foto",
+  "after_dependencies": [
+    "ai_task",
+    "camera"
+  ],
+  "categories": [
+    "energy.meters_monitoring"
+  ],
+  "codeowners": [
+    "@GITHUB_USER"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "media_source"
+  ],
+  "documentation": "https://github.com/GITHUB_USER/ha-zaehlerstand",
+  "integration_type": "device",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/GITHUB_USER/ha-zaehlerstand/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}

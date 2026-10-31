@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "zaehlerstand": {
+        "default": "mdi:counter"
+      }
+    },
+    "text": {
+      "zaehlernummer": {
+        "default": "mdi:identifier"
+      }
+    },
+    "image": {
+      "foto": {
+        "default": "mdi:camera"
+      }
+    }
+  },
+  "services": {
+    "foto_auswerten": {
+      "service": "mdi:camera-iris"
+    },
+    "wert_setzen": {
+      "service": "mdi:pencil"
+    }
+  }
+}
