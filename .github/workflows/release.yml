@@ -1,0 +1,38 @@
+name: Release
+
+# Beim Veröffentlichen eines GitHub-Releases (Tag z. B. v1.0.1) wird die Version
+# in manifest.json auf den Tag gesetzt und ein ZIP als Release-Asset angehängt.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Version in manifest.json setzen
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 - "$VERSION" <<'EOF'
+          import json, sys
+          p = "custom_components/zaehlerstand/manifest.json"
+          m = json.load(open(p, encoding="utf-8"))
+          m["version"] = sys.argv[1]
+          open(p, "w", encoding="utf-8").write(json.dumps(m, ensure_ascii=False, indent=2) + "\n")
+          EOF
+
+      - name: ZIP erstellen
+        run: |
+          cd custom_components/zaehlerstand
+          zip -r ../../zaehlerstand.zip . -x "__pycache__/*"
+
+      - name: ZIP an Release anhängen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" zaehlerstand.zip --clobber
