@@ -1,11 +1,11 @@
 foto_auswerten:
+  target:
+    entity:
+      integration: zaehlerstand
+      domain: sensor
+    device:
+      integration: zaehlerstand
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: zaehlerstand
-          domain: sensor
     foto:
       selector:
         media:
@@ -25,13 +25,13 @@ foto_auswerten:
         boolean:
 
 wert_setzen:
+  target:
+    entity:
+      integration: zaehlerstand
+      domain: sensor
+    device:
+      integration: zaehlerstand
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: zaehlerstand
-          domain: sensor
     wert:
       required: true
       selector:

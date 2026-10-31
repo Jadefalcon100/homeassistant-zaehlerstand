@@ -86,10 +86,6 @@
       "name": "Read photo",
       "description": "Reads the meter value from a photo (media browser) or camera snapshot using AI and stores it.",
       "fields": {
-        "entity_id": {
-          "name": "Meter",
-          "description": "Meter reading sensor."
-        },
         "foto": {
           "name": "Photo",
           "description": "Photo from the media browser, e.g. uploaded to Local Media."
@@ -112,10 +108,6 @@
       "name": "Set reading manually",
       "description": "Sets the meter reading without a photo.",
       "fields": {
-        "entity_id": {
-          "name": "Meter",
-          "description": "Meter reading sensor."
-        },
         "wert": {
           "name": "Value",
           "description": "New meter reading."

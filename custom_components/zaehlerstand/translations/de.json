@@ -86,10 +86,6 @@
       "name": "Foto auswerten",
       "description": "Liest den Zählerstand per KI aus einem Foto (Medienbrowser) oder einem Kamerabild und speichert ihn.",
       "fields": {
-        "entity_id": {
-          "name": "Zähler",
-          "description": "Zählerstand-Sensor des Zählers."
-        },
         "foto": {
           "name": "Foto",
           "description": "Foto aus dem Medienbrowser, z. B. unter „Lokale Medien“ hochgeladen."
@@ -112,10 +108,6 @@
       "name": "Zählerstand manuell setzen",
       "description": "Setzt den Zählerstand ohne Foto.",
       "fields": {
-        "entity_id": {
-          "name": "Zähler",
-          "description": "Zählerstand-Sensor des Zählers."
-        },
         "wert": {
           "name": "Wert",
           "description": "Neuer Zählerstand."

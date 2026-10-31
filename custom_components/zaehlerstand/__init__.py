@@ -22,7 +22,11 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -54,9 +58,19 @@ LOCAL_MEDIA_PREFIX = "media-source://media_source/"
 
 type ZaehlerConfigEntry = ConfigEntry[ZaehlerData]
 
+ATTR_DEVICE_ID = "device_id"
+# Felder, die der Ziel-Selektor (target) in der Oberfläche liefern kann
+_TARGET_FIELDS = {
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(cv.string, [cv.string]),
+    vol.Optional("area_id"): object,
+    vol.Optional("floor_id"): object,
+    vol.Optional("label_id"): object,
+}
+
 READ_PHOTO_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        **_TARGET_FIELDS,
         vol.Optional(ATTR_PHOTO): vol.Any(dict, cv.string),
         vol.Optional(ATTR_CAMERA): cv.entity_id,
         vol.Optional(CONF_AI_TASK_ENTITY): cv.entity_id,
@@ -66,7 +80,7 @@ READ_PHOTO_SCHEMA = vol.Schema(
 
 SET_VALUE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        **_TARGET_FIELDS,
         vol.Required(ATTR_VALUE): vol.Coerce(float),
         vol.Optional(ATTR_FORCE, default=False): cv.boolean,
     }
@@ -99,6 +113,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SET_VALUE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
+
+    from .http_api import async_register_http
+
+    await async_register_http(hass)
     return True
 
 
@@ -130,16 +148,76 @@ def _option(entry: ConfigEntry, key: str, default: Any = None) -> Any:
 # --------------------------------------------------------------------------- #
 # Hilfsfunktionen
 # --------------------------------------------------------------------------- #
-def _entry_for_entity(hass: HomeAssistant, entity_id: str) -> ZaehlerConfigEntry:
-    """Den Config-Entry zu einer Entität dieser Integration finden."""
-    ent = er.async_get(hass).async_get(entity_id)
-    if ent is None or ent.platform != DOMAIN or ent.config_entry_id is None:
+def _as_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(",") if v.strip()]
+    return list(value)
+
+
+def _sensor_entity_id(hass: HomeAssistant, entry_id: str) -> str | None:
+    """Entity-ID des Zählerstand-Sensors eines Zählers."""
+    return er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{entry_id}_zaehlerstand"
+    )
+
+
+def _entry_from_call(hass: HomeAssistant, call: ServiceCall) -> ZaehlerConfigEntry:
+    """Genau einen Zähler aus dem Ziel (Entität oder Gerät) ermitteln."""
+    if any(call.data.get(key) for key in ("area_id", "floor_id", "label_id")):
         raise ServiceValidationError(
-            f"{entity_id} gehört nicht zur Integration „Zählerstand per Foto“."
+            "Bitte als Ziel einen Zähler (Gerät oder Entität) wählen, keinen "
+            "Bereich, keine Etage und kein Label."
         )
-    entry = hass.config_entries.async_get_entry(ent.config_entry_id)
+
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    own_entries = {e.entry_id for e in hass.config_entries.async_entries(DOMAIN)}
+    entry_ids: set[str] = set()
+
+    for entity_id in _as_list(call.data.get(ATTR_ENTITY_ID)):
+        ent = ent_reg.async_get(entity_id)
+        if ent is None or ent.config_entry_id not in own_entries:
+            raise ServiceValidationError(
+                f"{entity_id} gehört nicht zur Integration „Zählerstand per Foto“."
+            )
+        entry_ids.add(ent.config_entry_id)
+
+    for device_id in _as_list(call.data.get(ATTR_DEVICE_ID)):
+        device = dev_reg.async_get(device_id)
+        matches = own_entries & set(device.config_entries) if device else set()
+        if not matches:
+            raise ServiceValidationError(
+                "Das gewählte Gerät gehört nicht zur Integration „Zählerstand per Foto“."
+            )
+        entry_ids |= matches
+
+    if not entry_ids:
+        raise ServiceValidationError("Bitte einen Zähler als Ziel auswählen.")
+    if len(entry_ids) > 1:
+        raise ServiceValidationError(
+            "Bitte genau einen Zähler auswählen – ein Foto gehört immer zu einem Zähler."
+        )
+
+    entry = hass.config_entries.async_get_entry(entry_ids.pop())
     if entry is None or not hasattr(entry, "runtime_data"):
-        raise ServiceValidationError(f"Zähler für {entity_id} ist nicht geladen.")
+        raise ServiceValidationError("Der gewählte Zähler ist nicht geladen.")
+    return entry
+
+
+def entry_from_target(hass: HomeAssistant, target: str) -> ZaehlerConfigEntry:
+    """Zähler über Entity-ID (beliebige Entität des Zählers) oder Entry-ID finden."""
+    entry = hass.config_entries.async_get_entry(target)
+    if entry is None or entry.domain != DOMAIN:
+        ent = er.async_get(hass).async_get(target)
+        entry = (
+            hass.config_entries.async_get_entry(ent.config_entry_id)
+            if ent is not None and ent.config_entry_id
+            else None
+        )
+    if entry is None or entry.domain != DOMAIN or not hasattr(entry, "runtime_data"):
+        raise ServiceValidationError(f"Kein geladener Zähler für „{target}“ gefunden.")
     return entry
 
 
@@ -167,6 +245,25 @@ def _media_id_to_path(hass: HomeAssistant, media_id: str) -> Path | None:
     return path
 
 
+async def async_save_image(
+    hass: HomeAssistant, content: bytes, content_type: str | None, slug: str
+) -> str:
+    """Bild im lokalen Medienordner ablegen und die Media-ID zurückgeben."""
+    ext = mimetypes.guess_extension(content_type or "") or ".jpg"
+    if ext in (".jpe", ".jpeg"):
+        ext = ".jpg"
+    dir_key, base = _local_media_dir(hass)
+    filename = f"{slug}_{dt_util.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]}{ext}"
+    target = base / MEDIA_SUBDIR / filename
+
+    def _write() -> None:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+
+    await hass.async_add_executor_job(_write)
+    return f"{LOCAL_MEDIA_PREFIX}{dir_key}/{MEDIA_SUBDIR}/{filename}"
+
+
 async def _async_camera_snapshot(
     hass: HomeAssistant, camera_entity: str, slug: str
 ) -> str:
@@ -174,19 +271,7 @@ async def _async_camera_snapshot(
     from homeassistant.components.camera import async_get_image
 
     image = await async_get_image(hass, camera_entity)
-    ext = mimetypes.guess_extension(image.content_type or "") or ".jpg"
-    if ext == ".jpe":
-        ext = ".jpg"
-    dir_key, base = _local_media_dir(hass)
-    filename = f"{slug}_{dt_util.now().strftime('%Y%m%d_%H%M%S')}{ext}"
-    target = base / MEDIA_SUBDIR / filename
-
-    def _write() -> None:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(image.content)
-
-    await hass.async_add_executor_job(_write)
-    return f"{LOCAL_MEDIA_PREFIX}{dir_key}/{MEDIA_SUBDIR}/{filename}"
+    return await async_save_image(hass, image.content, image.content_type, slug)
 
 
 _NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)?")
@@ -301,7 +386,7 @@ def _check_plausible(
         and data.value is not None
         and value < data.value
     ):
-        raise HomeAssistantError(
+        raise ImplausibleReadingError(
             f"Neuer Zählerstand {value} ist kleiner als der bisherige {data.value}. "
             "Prüfe das Foto oder rufe den Dienst mit „erzwingen: true“ auf "
             "(z. B. nach einem Zählerwechsel)."
@@ -312,7 +397,7 @@ def _check_plausible(
 # Dienste
 # --------------------------------------------------------------------------- #
 async def _async_read_photo(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
-    entry = _entry_for_entity(hass, call.data[ATTR_ENTITY_ID])
+    entry = _entry_from_call(hass, call)
     data: ZaehlerData = entry.runtime_data
 
     photo = call.data.get(ATTR_PHOTO)
@@ -328,20 +413,44 @@ async def _async_read_photo(hass: HomeAssistant, call: ServiceCall) -> ServiceRe
     if not media_id:
         raise ServiceValidationError("Das Foto enthält keine gültige Media-ID.")
 
-    ai_entity = call.data.get(CONF_AI_TASK_ENTITY) or _option(
-        entry, CONF_AI_TASK_ENTITY
+    return await async_process_media(
+        hass,
+        entry,
+        media_id,
+        source=source,
+        ai_entity=call.data.get(CONF_AI_TASK_ENTITY),
+        force=call.data[ATTR_FORCE],
     )
+
+
+class ImplausibleReadingError(HomeAssistantError):
+    """Neuer Wert ist kleiner als der bisherige."""
+
+
+async def async_process_media(
+    hass: HomeAssistant,
+    entry: ZaehlerConfigEntry,
+    media_id: str,
+    *,
+    source: str,
+    ai_entity: str | None = None,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Foto auswerten, prüfen, speichern – gemeinsam für Dienst und Upload."""
+    data: ZaehlerData = entry.runtime_data
+    ai_entity = ai_entity or _option(entry, CONF_AI_TASK_ENTITY)
     result = await _async_ask_ai(hass, entry, media_id, ai_entity)
 
     readable = result.get("lesbar")
     value = _parse_reading(result.get("zaehlerstand"))
     if readable is False or value is None:
         raise HomeAssistantError(
-            f"Zählerstand konnte nicht sicher erkannt werden (KI-Antwort: {result}). "
-            "Bitte ein schärferes, gerade aufgenommenes Foto ohne Spiegelungen verwenden."
+            "Zählerstand konnte nicht sicher erkannt werden. Bitte ein schärferes, "
+            "gerade aufgenommenes Foto ohne Spiegelungen verwenden."
+            f" (KI-Antwort: {result})"
         )
 
-    _check_plausible(entry, data, value, call.data[ATTR_FORCE])
+    _check_plausible(entry, data, value, force)
 
     detected = (result.get("zaehlernummer") or "").strip() or None
     matches: bool | None = None
@@ -376,6 +485,7 @@ async def _async_read_photo(hass: HomeAssistant, call: ServiceCall) -> ServiceRe
 
     response = {
         "zaehlerstand": value,
+        "einheit": METER_TYPES[data.meter_type]["unit"],
         "zaehlernummer_erkannt": detected,
         "zaehlernummer_passt": matches,
         "foto": media_id,
@@ -383,13 +493,17 @@ async def _async_read_photo(hass: HomeAssistant, call: ServiceCall) -> ServiceRe
     }
     hass.bus.async_fire(
         EVENT_READING,
-        {"entity_id": call.data[ATTR_ENTITY_ID], "zaehler": entry.title, **response},
+        {
+            "entity_id": _sensor_entity_id(hass, entry.entry_id),
+            "zaehler": entry.title,
+            **response,
+        },
     )
     return response
 
 
 async def _async_set_value(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
-    entry = _entry_for_entity(hass, call.data[ATTR_ENTITY_ID])
+    entry = _entry_from_call(hass, call)
     data: ZaehlerData = entry.runtime_data
     value = float(call.data[ATTR_VALUE])
     _check_plausible(entry, data, value, call.data[ATTR_FORCE])
@@ -405,6 +519,10 @@ async def _async_set_value(hass: HomeAssistant, call: ServiceCall) -> ServiceRes
     response = {"zaehlerstand": value, "zeitpunkt": now.isoformat()}
     hass.bus.async_fire(
         EVENT_READING,
-        {"entity_id": call.data[ATTR_ENTITY_ID], "zaehler": entry.title, **response},
+        {
+            "entity_id": _sensor_entity_id(hass, entry.entry_id),
+            "zaehler": entry.title,
+            **response,
+        },
     )
     return response
