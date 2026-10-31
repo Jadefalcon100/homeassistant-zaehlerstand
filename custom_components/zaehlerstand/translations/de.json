@@ -1,1 +1,130 @@
-
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zähler hinzufügen",
+        "description": "Lege einen Strom-, Gas- oder Wasserzähler an. Für jeden weiteren Zähler die Integration erneut hinzufügen.",
+        "data": {
+          "zaehlertyp": "Zählertyp",
+          "name": "Name (optional)",
+          "zaehlernummer": "Zählernummer (optional)",
+          "ai_task_entity": "KI-Entität (AI Task)",
+          "nachkommastellen": "Angezeigte Nachkommastellen",
+          "rueckgang_erlauben": "Sinkenden Zählerstand erlauben"
+        },
+        "data_description": {
+          "ai_task_entity": "Leer lassen, um die Standard-KI aus den AI-Task-Einstellungen zu verwenden.",
+          "zaehlernummer": "Bleibt sie leer, wird die auf dem ersten Foto erkannte Nummer übernommen.",
+          "rueckgang_erlauben": "Normalerweise wird ein kleinerer Wert als der bisherige abgelehnt (schützt vor Lesefehlern)."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Zähler-Optionen",
+        "data": {
+          "ai_task_entity": "KI-Entität (AI Task)",
+          "nachkommastellen": "Angezeigte Nachkommastellen",
+          "rueckgang_erlauben": "Sinkenden Zählerstand erlauben"
+        },
+        "data_description": {
+          "ai_task_entity": "Leer lassen, um die Standard-KI zu verwenden."
+        }
+      }
+    }
+  },
+  "selector": {
+    "zaehlertyp": {
+      "options": {
+        "strom": "Strom",
+        "gas": "Gas",
+        "wasser": "Wasser"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "zaehlerstand": {
+        "name": "Zählerstand",
+        "state_attributes": {
+          "letzte_ablesung": {
+            "name": "Letzte Ablesung"
+          },
+          "quelle": {
+            "name": "Quelle"
+          },
+          "foto": {
+            "name": "Foto"
+          },
+          "foto_pfad": {
+            "name": "Foto-Pfad"
+          },
+          "erkannte_zaehlernummer": {
+            "name": "Erkannte Zählernummer"
+          },
+          "zaehlernummer_passt": {
+            "name": "Zählernummer passt"
+          }
+        }
+      }
+    },
+    "text": {
+      "zaehlernummer": {
+        "name": "Zählernummer"
+      }
+    },
+    "image": {
+      "foto": {
+        "name": "Letztes Foto"
+      }
+    }
+  },
+  "services": {
+    "foto_auswerten": {
+      "name": "Foto auswerten",
+      "description": "Liest den Zählerstand per KI aus einem Foto (Medienbrowser) oder einem Kamerabild und speichert ihn.",
+      "fields": {
+        "entity_id": {
+          "name": "Zähler",
+          "description": "Zählerstand-Sensor des Zählers."
+        },
+        "foto": {
+          "name": "Foto",
+          "description": "Foto aus dem Medienbrowser, z. B. unter „Lokale Medien“ hochgeladen."
+        },
+        "kamera": {
+          "name": "Kamera",
+          "description": "Alternativ: Kamera, von der ein Schnappschuss gemacht wird."
+        },
+        "ai_task_entity": {
+          "name": "KI-Entität",
+          "description": "Überschreibt die in der Integration eingestellte KI-Entität."
+        },
+        "erzwingen": {
+          "name": "Erzwingen",
+          "description": "Auch speichern, wenn der Wert kleiner als der bisherige ist (z. B. nach Zählerwechsel)."
+        }
+      }
+    },
+    "wert_setzen": {
+      "name": "Zählerstand manuell setzen",
+      "description": "Setzt den Zählerstand ohne Foto.",
+      "fields": {
+        "entity_id": {
+          "name": "Zähler",
+          "description": "Zählerstand-Sensor des Zählers."
+        },
+        "wert": {
+          "name": "Wert",
+          "description": "Neuer Zählerstand."
+        },
+        "erzwingen": {
+          "name": "Erzwingen",
+          "description": "Auch speichern, wenn der Wert kleiner als der bisherige ist."
+        }
+      }
+    }
+  }
+}
